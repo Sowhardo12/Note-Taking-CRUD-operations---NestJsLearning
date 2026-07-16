@@ -80,7 +80,10 @@ REMOVE A NOTE BY ID: DELETE
 curl -X DELETE http://localhost:3000/notes/zkl0cf3
 ```
 
-
+Swagger Documentation:
+```bash
+http://localhost:3000/api
+```
 
 
 
