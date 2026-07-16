@@ -8,6 +8,10 @@ import { Note } from './note.model';
 export class NotesService {
   private notes : Note[] = [];
   
+  checkHealth(){
+    return 'working fine';
+  }
+
   getAllNotes():Note[]{
     return this.notes;
   }
