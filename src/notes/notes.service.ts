@@ -16,7 +16,7 @@ export class NotesService {
     return this.notes;
   }
   getNoteById(id:string):Note{
-    const found = this.notes.find((n)=>{n.id===id});
+    const found = this.notes.find((n)=>n.id===id);
     if(!found){throw new NotFoundException('Note Does not Exist')}
     return found;
 
