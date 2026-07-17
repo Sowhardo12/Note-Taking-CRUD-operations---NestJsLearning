@@ -1,9 +1,10 @@
-import { Controller, Get, Post,Put, Delete,Body, Param } from '@nestjs/common';
+import { Controller, Get, Post,Put, Delete,Body, Param, Query } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import type { Note } from './note.model';
 import { ApiTags,ApiOperation,ApiResponse } from '@nestjs/swagger';
+import { GetNotesFilterDto } from './dto/get-notes-filter.dto';
 
 @ApiTags('notes')
 @Controller('notes')
@@ -15,11 +16,18 @@ export class NotesController {
   getHealthChecked():any{
     return this.noteService.checkHealth();
   }
+
+  @Post('reset')
+  @ApiOperation({ summary: 'Purge active mutations and reload the seed baseline dataset' })
+  resetSystem(){
+    return this.noteService.resetSystem();
+  }
+
   @Get()
   @ApiOperation({ summary: 'Retrieve all existing notes' })
   @ApiResponse({ status: 200, description: 'Array of notes returned successfully.' })
-  getAllNotes():Note[]{
-    return this.noteService.getAllNotes();
+  getAllNotes(@Query() filterNoteDto: GetNotesFilterDto):Note[]{
+    return this.noteService.getAllNotes(filterNoteDto);
   }
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a single note by its unique ID string' })
