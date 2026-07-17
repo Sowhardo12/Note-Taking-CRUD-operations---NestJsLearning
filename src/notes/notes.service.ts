@@ -9,7 +9,7 @@ export class NotesService {
   private notes : Note[] = [];
   
   checkHealth(){
-    return 'working fine';
+    return {"status":"OK"};
   }
 
   getAllNotes():Note[]{
