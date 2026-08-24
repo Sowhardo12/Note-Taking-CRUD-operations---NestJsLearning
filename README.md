@@ -1,5 +1,5 @@
 
-## Description
+## Description of project
 
 Note Taking CRUD application using NestJs
 
