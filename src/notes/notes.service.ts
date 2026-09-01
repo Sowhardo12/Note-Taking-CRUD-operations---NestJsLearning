@@ -81,6 +81,31 @@ export class NotesService implements OnModuleInit {
   return newNote;
   }
 
+
+  updateNote(id: string, updateNoteDto: UpdateNoteDto): Note {
+  const existingNote = this.getNoteById(id);
+
+  const updatedTitle = updateNoteDto.title ?? existingNote.title;
+  const updatedContent = updateNoteDto.content ?? existingNote.content;
+
+  const stmt = this.db.prepare(
+    'UPDATE notes SET title = ?, content = ? WHERE id = ?'
+  );
+  stmt.run(updatedTitle, updatedContent, id);
+
+  return {
+    ...existingNote,
+    title: updatedTitle,
+    content: updatedContent,
+  };
+}
+
+deleteNote(id: string): void {
+  this.getNoteById(id); 
+  const stmt = this.db.prepare('DELETE FROM notes WHERE id = ?');
+  stmt.run(id);
+}
+
   checkHealth() {
     return { status: 'OK' };
   }
