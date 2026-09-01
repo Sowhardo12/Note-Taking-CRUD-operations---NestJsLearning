@@ -56,27 +56,55 @@ export class NotesService implements OnModuleInit,OnModuleDestroy {
     }
   }
 
-  async getAllNotes(filterNoteDto: GetNotesFilterDto): Promise<Note[]> {
-  const { search } = filterNoteDto;
-  //as search is optional
-  if (search) {
-    const query = 'SELECT * FROM notes WHERE LOWER(title) LIKE LOWER($1)';
-    const res = await this.pool.query(query, [`%${search}%`]);
+    async getAllNotes(filterNoteDto: GetNotesFilterDto): Promise<Note[]> {
+    const { search } = filterNoteDto;
+    //as search is optional
+    if (search) {
+      const query = 'SELECT * FROM notes WHERE LOWER(title) LIKE LOWER($1)';
+      const res = await this.pool.query(query, [`%${search}%`]);
+      return res.rows;
+    }
+    const res = await this.pool.query('SELECT * FROM notes');
     return res.rows;
   }
-  const res = await this.pool.query('SELECT * FROM notes');
-  return res.rows;
-}
 
- async getNoteById(id: string): Promise<Note> {
-  const res = await this.pool.query('SELECT * FROM notes WHERE id = $1', [id]);
-  if (res.rows.length === 0) {
-    throw new NotFoundException('Note Does not Exist');
+  async getNoteById(id: string): Promise<Note> {
+    const res = await this.pool.query('SELECT * FROM notes WHERE id = $1', [id]);
+    if (res.rows.length === 0) {
+      throw new NotFoundException('Note Does not Exist');
+    }
+    return res.rows[0];
   }
-  return res.rows[0];
-}
   
+  async createNote(createNoteDto: CreateNoteDto): Promise<Note> {
+    const { title, content } = createNoteDto;
+    const id = Math.random().toString(36).substring(2, 9);
+    const createdAt = new Date();
 
+    const res = await this.pool.query(
+      'INSERT INTO notes (id, title, content, "createdAt") VALUES ($1, $2, $3, $4) RETURNING *',
+      [id, title, content, createdAt]
+    );
+    return res.rows[0];
+  }
+
+  async updateNote(id: string, updateNoteDto: UpdateNoteDto): Promise<Note> {
+    const existingNote = await this.getNoteById(id); 
+
+    const updatedTitle = updateNoteDto.title ?? existingNote.title;
+    const updatedContent = updateNoteDto.content ?? existingNote.content;
+
+    const res = await this.pool.query(
+      'UPDATE notes SET title = $1, content = $2 WHERE id = $3 RETURNING *',
+      [updatedTitle, updatedContent, id]
+    );
+    return res.rows[0];
+  }
+
+  async deleteNote(id: string): Promise<void> {
+    await this.getNoteById(id); 
+    await this.pool.query('DELETE FROM notes WHERE id = $1', [id]);
+  }
 
   checkHealth() {
     return { status: 'OK' };

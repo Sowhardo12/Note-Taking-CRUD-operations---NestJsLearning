@@ -55,7 +55,7 @@ export class NotesController {
   @ApiOperation({ summary: 'Remove a note entity completely from memory storage' })
   @ApiResponse({ status: 204, description: 'No Content' })
   @ApiResponse({ status: 404, description: 'Target note entity could not be found.' })
-  deleteNote(@Param('id') id:string):void{
+  deleteNote(@Param('id') id:string):Promise<void>{
     return this.noteService.deleteNote(id);
   }
 }
