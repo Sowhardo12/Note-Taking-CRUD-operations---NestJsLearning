@@ -56,10 +56,28 @@ export class NotesService implements OnModuleInit,OnModuleDestroy {
     }
   }
 
+  async getAllNotes(filterNoteDto: GetNotesFilterDto): Promise<Note[]> {
+  const { search } = filterNoteDto;
+  //as search is optional
+  if (search) {
+    const query = 'SELECT * FROM notes WHERE LOWER(title) LIKE LOWER($1)';
+    const res = await this.pool.query(query, [`%${search}%`]);
+    return res.rows;
+  }
+  const res = await this.pool.query('SELECT * FROM notes');
+  return res.rows;
+}
 
-
-
+ async getNoteById(id: string): Promise<Note> {
+  const res = await this.pool.query('SELECT * FROM notes WHERE id = $1', [id]);
+  if (res.rows.length === 0) {
+    throw new NotFoundException('Note Does not Exist');
+  }
+  return res.rows[0];
+}
   
+
+
   checkHealth() {
     return { status: 'OK' };
   }

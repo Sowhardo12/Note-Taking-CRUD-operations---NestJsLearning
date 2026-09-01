@@ -26,28 +26,28 @@ export class NotesController {
   @Get()
   @ApiOperation({ summary: 'Retrieve all existing notes' })
   @ApiResponse({ status: 200, description: 'Array of notes returned successfully.' })
-  getAllNotes(@Query() filterNoteDto: GetNotesFilterDto):Note[]{
+  getAllNotes(@Query() filterNoteDto: GetNotesFilterDto):Promise<Note[]>{
     return this.noteService.getAllNotes(filterNoteDto);
   }
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a single note by its unique ID string' })
   @ApiResponse({ status: 200, description: 'The requested note object matching the ID parameter.' })
   @ApiResponse({ status: 404, description: 'Target note entity could not be found.' })
-  getNoteById(@Param('id') id:string):Note{
+  getNoteById(@Param('id') id:string):Promise<Note>{
     return this.noteService.getNoteById(id);
   }
   @Post()
   @ApiOperation({ summary: 'Create and append a new note record' })
   @ApiResponse({ status: 201, description: 'The note entity was successfully created and validated.' })
   @ApiResponse({ status: 400, description: 'Inbound body data failed validation assertions.' })
-  createNote(@Body() createNoteDto:CreateNoteDto):Note{
+  createNote(@Body() createNoteDto:CreateNoteDto):Promise<Note>{
     return this.noteService.createNote(createNoteDto);
   }
   @Put(':id')
   @ApiOperation({ summary: 'Update parameters on an existing note' })
   @ApiResponse({ status: 200, description: 'The target note entity was altered successfully.' })
   @ApiResponse({ status: 404, description: 'Target note resource not found.' })
-  updateNote(@Param('id') id:string,@Body() updateNoteDto:UpdateNoteDto):Note{
+  updateNote(@Param('id') id:string,@Body() updateNoteDto:UpdateNoteDto):Promise<Note>{
     return this.noteService.updateNote(id,updateNoteDto);
 
   }
