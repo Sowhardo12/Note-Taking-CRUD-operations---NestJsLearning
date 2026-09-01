@@ -130,3 +130,11 @@ instead of DB Browser, I ran sample queries into terminal using node js commands
  get all notes: node -e "const db = require('better-sqlite3')('notes.db'); console.table(db.prepare('SELECT * FROM notes;').all());"
  count all notes: $ node -e "const db = require('better-sqlite3')('notes.db'); console.log(db.prepare('SELECT COUNT(*) FROM notes;').get());"
 
+
+
+ W3 · A3 — Connecting your CRUD to the database
+
+running: docker run --name notedb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=notes -p 5436:5432 -v notesdata:/var/lib/postgresql/data -d postgres
+(port 5432 is already in used by host machine)
+
+
