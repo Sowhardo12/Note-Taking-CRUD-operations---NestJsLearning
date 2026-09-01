@@ -16,7 +16,7 @@ $ npm install
 $ npm run start
 
 # watch mode
-$ npm run start:dev
+$ npm run start:dev    (this will automatically create the db and seed the data )
 
 # production mode
 $ npm run start:prod
@@ -119,3 +119,14 @@ W3 · A2 — Connecting your CRUD to the database
 after running in db browser: 
 SELECT * FROM notes  -> it shows all the task entries inside the tasks table 
 SELECT COUNT(*) FROM notes -> shows how many tasks are there
+
+
+why SQLlite: 
+the database lives in a single file notes.db which works as a single source of truth. The in memory
+data was getting lost on every restart of the server, but this data inside notes.db remains
+consistent. 
+
+instead of DB Browser, I ran sample queries into terminal using node js commands: 
+ get all notes: node -e "const db = require('better-sqlite3')('notes.db'); console.table(db.prepare('SELECT * FROM notes;').all());"
+ count all notes: $ node -e "const db = require('better-sqlite3')('notes.db'); console.log(db.prepare('SELECT COUNT(*) FROM notes;').get());"
+
