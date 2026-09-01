@@ -1,0 +1,28 @@
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres:dev@db:5432/notes
+    depends_on:
+      db:
+        condition: service_healthy  
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: notes
+    ports:
+      - "5436:5432"
+    volumes:
+      - notedata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d notes"]  
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  notedata: 
