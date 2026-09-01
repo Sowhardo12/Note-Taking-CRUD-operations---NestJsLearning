@@ -1,118 +1,74 @@
 // notes.service.ts
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit ,OnModuleDestroy} from '@nestjs/common';
 import Database from 'better-sqlite3';
 import { Note } from './note.model';
+import { Pool } from 'pg';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { GetNotesFilterDto } from './dto/get-notes-filter.dto';
 
 @Injectable()
-export class NotesService implements OnModuleInit {
-  private db!: Database.Database;
+export class NotesService implements OnModuleInit,OnModuleDestroy {
+  private pool!: Pool;
 
   onModuleInit() {
-    this.db = new Database('notes.db');
-    
-    // Create Table
-    this.db.exec(`
+    this.pool = new Pool({
+      connectionString: process.env.DATABASE_URL || 'postgres://postgres:dev@localhost:5432/tasks',
+    });
+    this.initDb();
+  }
+  async onModuleDestroy() {
+    await this.pool.end();
+  }
+
+  private async initDb(): Promise<void> {
+    // Create Table if missing
+    await this.pool.query(`
       CREATE TABLE IF NOT EXISTS notes (
-        id TEXT PRIMARY KEY,
+        id VARCHAR(50) PRIMARY KEY,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
-        createdAt TEXT NOT NULL
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    this.seedInitialData();
+    await this.seedInitialData();
   }
 
-  private seedInitialData(): void {
-    const countRow = this.db.prepare('SELECT COUNT(*) as count FROM notes').get() as { count: number };
-    if (countRow.count === 0) {
-      const insert = this.db.prepare(
-        'INSERT INTO notes (id, title, content, createdAt) VALUES (?, ?, ?, ?)'
-      );
-      
+
+  private async seedInitialData(): Promise<void> {
+    const res = await this.pool.query('SELECT COUNT(*) FROM notes');
+    const count = parseInt(res.rows[0].count, 10);
+
+    if (count === 0) {
       const seedNotes = [
-        { id: 'n1', title: 'Buy milk organic', content: 'Get organic whole milk.', createdAt: new Date().toISOString() },
-        { id: 'n2', title: 'Learn NestJS DB', content: 'Master raw SQL queries and SQLite integration.', createdAt: new Date().toISOString() },
-        { id: 'n3', title: 'System Architecture', content: 'Design containerized microservices and backend systems.', createdAt: new Date().toISOString() }
+        { id: 'n1', title: 'Buy milk organic', content: 'Get organic whole milk.', createdAt: new Date() },
+        { id: 'n2', title: 'Learn NestJS DB', content: 'Master raw SQL queries and PostgreSQL integration.', createdAt: new Date() },
+        { id: 'n3', title: 'System Architecture', content: 'Design containerized microservices and backend systems.', createdAt: new Date() }
       ];
 
       for (const note of seedNotes) {
-        insert.run(note.id, note.title, note.content, note.createdAt);
+        await this.pool.query(
+          'INSERT INTO notes (id, title, content, "createdAt") VALUES ($1, $2, $3, $4)',
+          [note.id, note.title, note.content, note.createdAt]
+        );
       }
     }
   }
 
-  getAllNotes(filterNoteDto: GetNotesFilterDto): Note[] {
-  const { search } = filterNoteDto;
-  if (search) {
-    const stmt = this.db.prepare('SELECT * FROM notes WHERE LOWER(title) LIKE LOWER(?)');
-    return stmt.all(`%${search}%`) as Note[];
-  }
-  return this.db.prepare('SELECT * FROM notes').all() as Note[];
-}
-
-  getNoteById(id: string): Note {
-    const stmt = this.db.prepare('SELECT * FROM notes WHERE id = ?');
-    const note = stmt.get(id) as Note | undefined;
-    if (!note) {
-      throw new NotFoundException('Note Does not Exist');
-    }
-    return note;
-  }
 
 
-  createNote(createNoteDto: CreateNoteDto): Note {
-  const { title, content } = createNoteDto;
-  const newNote: Note = {
-    id: Math.random().toString(36).substring(2, 9),
-    title,
-    content,
-    createdAt: new Date().toISOString(),
-  };
 
-  const q = this.db.prepare(
-    'INSERT INTO notes (id, title, content, createdAt) VALUES (?, ?, ?, ?)'
-  );
-  q.run(newNote.id, newNote.title, newNote.content, newNote.createdAt);
-
-  return newNote;
-  }
-
-
-  updateNote(id: string, updateNoteDto: UpdateNoteDto): Note {
-  const existingNote = this.getNoteById(id);
-
-  const updatedTitle = updateNoteDto.title ?? existingNote.title;
-  const updatedContent = updateNoteDto.content ?? existingNote.content;
-
-  const stmt = this.db.prepare(
-    'UPDATE notes SET title = ?, content = ? WHERE id = ?'
-  );
-  stmt.run(updatedTitle, updatedContent, id);
-
-  return {
-    ...existingNote,
-    title: updatedTitle,
-    content: updatedContent,
-  };
-}
-
-deleteNote(id: string): void {
-  this.getNoteById(id); 
-  const stmt = this.db.prepare('DELETE FROM notes WHERE id = ?');
-  stmt.run(id);
-}
-
+  
   checkHealth() {
     return { status: 'OK' };
   }
 
-  resetSystem(): { message: string } {
-    this.db.prepare('DELETE FROM notes').run();
-    this.seedInitialData();
+  async resetSystem(): Promise<{ message: string }> {
+    await this.pool.query('DELETE FROM notes');
+    await this.seedInitialData();
     return { message: 'reset successful' };
   }
+
+  
 }
