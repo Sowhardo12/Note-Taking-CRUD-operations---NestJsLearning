@@ -117,5 +117,5 @@ curl -X POST http://localhost:3000/notes/reset
 W3 · A2 — Connecting your CRUD to the database
 
 after running in db browser: 
-SELECT * FROM tasks  -> it shows all the task entries inside the tasks table 
-
+SELECT * FROM notes  -> it shows all the task entries inside the tasks table 
+SELECT COUNT(*) FROM notes -> shows how many tasks are there
