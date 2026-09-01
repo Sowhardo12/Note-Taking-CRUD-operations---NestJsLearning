@@ -114,4 +114,8 @@ curl -X POST http://localhost:3000/notes/reset
 ```
 
 
+Adding Docker : docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks \
+ -p 5432:5432 -v taskdata:/var/lib/postgresq    (making sure docker desktop is running)
+
+
 

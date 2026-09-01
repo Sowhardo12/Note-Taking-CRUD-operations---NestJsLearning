@@ -1,69 +1,57 @@
-import { Injectable,NotFoundException } from '@nestjs/common';
+// notes.service.ts
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import Database from 'better-sqlite3';
+import { Note } from './note.model';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
-import { Note } from './note.model';
 import { GetNotesFilterDto } from './dto/get-notes-filter.dto';
 
 @Injectable()
-export class NotesService {
-  private notes : Note[] = [];
-  
-  constructor(){this.seedInitialData();}
-  
-  seedInitialData(): void {
-    this.notes = [
-      { id: 'n1', title: 'Buy milk', content: 'Get organic whole milk from the grocery store.', createdAt: new Date() },
-      { id: 'n2', title: 'Learn NestJS', content: 'Master modules, services, and dynamic DTO validation rules.', createdAt: new Date() },
-      { id: 'n3', title: 'System Architecture', content: 'Design containerized microservices and ledger lines.', createdAt: new Date() }
-    ];
-  }
+export class NotesService implements OnModuleInit {
+  private db: Database.Database;
 
+  onModuleInit() {
+    this.db = new Database('notes.db');
+    
+    // Create Table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+      )
+    `);
 
-  checkHealth(){
-    return {"status":"OK"};
-  }
-
-  getAllNotes(filterNoteDto : GetNotesFilterDto):Note[]{
-    const {search} = filterNoteDto;
-    let tempNotes = this.notes;
-    if(search){
-      //modify the tempNotes
-      tempNotes = tempNotes.filter((note)=>note.title.toLowerCase().includes(search.toLowerCase()));
-    }
-    return tempNotes;
-  }
-
-  resetSystem(): {message:string} {
     this.seedInitialData();
-    return {message:'reset successful'}
   }
 
-  getNoteById(id:string):Note{
-    const found = this.notes.find((n)=>n.id===id);
-    if(!found){throw new NotFoundException('Note Does not Exist')}
-    return found;
+  private seedInitialData(): void {
+    const countRow = this.db.prepare('SELECT COUNT(*) as count FROM notes').get() as { count: number };
+    if (countRow.count === 0) {
+      const insert = this.db.prepare(
+        'INSERT INTO notes (id, title, content, createdAt) VALUES (?, ?, ?, ?)'
+      );
+      
+      const seedNotes = [
+        { id: 'n1', title: 'Buy milk organic', content: 'Get organic whole milk.', createdAt: new Date().toISOString() },
+        { id: 'n2', title: 'Learn NestJS DB', content: 'Master raw SQL queries and SQLite integration.', createdAt: new Date().toISOString() },
+        { id: 'n3', title: 'System Architecture', content: 'Design containerized microservices and backend systems.', createdAt: new Date().toISOString() }
+      ];
 
+      for (const note of seedNotes) {
+        insert.run(note.id, note.title, note.content, note.createdAt);
+      }
+    }
   }
-  createNote(createNoteDto:CreateNoteDto):Note{
-    const {title,content} = createNoteDto;
-    const newNote:Note = {
-      id: Math.random().toString(36).substring(2, 9),
-      title,
-      content,
-      createdAt: new Date(),
-    };
-    this.notes.push(newNote);
-    return newNote;
+
+  checkHealth() {
+    return { status: 'OK' };
   }
-  updateNote(id:string, updateNoteDto:UpdateNoteDto):Note{
-    const found = this.getNoteById(id);
-    if(!found){throw new NotFoundException('Note not found')}
-    Object.assign(found,updateNoteDto);
-    return found;
-  }
-  deleteNote(id:string):void{
-    const found = this.getNoteById(id);
-    if(!found){throw new NotFoundException('Note not found')}
-    this.notes = this.notes.filter((note)=>{note.id!==found.id});
+
+  resetSystem(): { message: string } {
+    this.db.prepare('DELETE FROM notes').run();
+    this.seedInitialData();
+    return { message: 'reset successful' };
   }
 }
