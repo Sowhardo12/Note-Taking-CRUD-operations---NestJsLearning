@@ -137,4 +137,18 @@ instead of DB Browser, I ran sample queries into terminal using node js commands
 running: docker run --name notedb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=notes -p 5436:5432 -v notesdata:/var/lib/postgresql/data -d postgres
 (port 5432 is already in used by host machine)
 
+after creation of an unified docker-compose to containerize both the db service and the api:
 
+run: cp .env.example .env && docker compose up -d    
+
+
+Endpoint Table:
+    GET /notes - List notes
+    GET /notes/:id - Fetch single note  
+    POST /notes - Create note  
+    PUT /notes/:id - Update note  
+    DELETE /notes/:id - Delete note  
+
+sample curl response: 
+curl -i http://localhost:3000/notes
+curl -i http://localhost:3000/notes/12
