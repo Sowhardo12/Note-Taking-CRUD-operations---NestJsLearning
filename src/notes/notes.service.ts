@@ -8,7 +8,7 @@ import { GetNotesFilterDto } from './dto/get-notes-filter.dto';
 
 @Injectable()
 export class NotesService implements OnModuleInit {
-  private db: Database.Database;
+  private db!: Database.Database;
 
   onModuleInit() {
     this.db = new Database('notes.db');
@@ -43,6 +43,24 @@ export class NotesService implements OnModuleInit {
         insert.run(note.id, note.title, note.content, note.createdAt);
       }
     }
+  }
+
+  getAllNotes(filterNoteDto: GetNotesFilterDto): Note[] {
+  const { search } = filterNoteDto;
+  if (search) {
+    const stmt = this.db.prepare('SELECT * FROM notes WHERE LOWER(title) LIKE LOWER(?)');
+    return stmt.all(`%${search}%`) as Note[];
+  }
+  return this.db.prepare('SELECT * FROM notes').all() as Note[];
+}
+
+  getNoteById(id: string): Note {
+    const stmt = this.db.prepare('SELECT * FROM notes WHERE id = ?');
+    const note = stmt.get(id) as Note | undefined;
+    if (!note) {
+      throw new NotFoundException('Note Does not Exist');
+    }
+    return note;
   }
 
   checkHealth() {
