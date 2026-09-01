@@ -114,8 +114,8 @@ curl -X POST http://localhost:3000/notes/reset
 ```
 
 
-Adding Docker : docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks \
- -p 5432:5432 -v taskdata:/var/lib/postgresq    (making sure docker desktop is running)
+W3 · A2 — Connecting your CRUD to the database
 
-
+after running in db browser: 
+SELECT * FROM tasks  -> it shows all the task entries inside the tasks table 
 
