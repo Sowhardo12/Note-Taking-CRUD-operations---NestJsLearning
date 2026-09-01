@@ -63,6 +63,24 @@ export class NotesService implements OnModuleInit {
     return note;
   }
 
+
+  createNote(createNoteDto: CreateNoteDto): Note {
+  const { title, content } = createNoteDto;
+  const newNote: Note = {
+    id: Math.random().toString(36).substring(2, 9),
+    title,
+    content,
+    createdAt: new Date().toISOString(),
+  };
+
+  const q = this.db.prepare(
+    'INSERT INTO notes (id, title, content, createdAt) VALUES (?, ?, ?, ?)'
+  );
+  q.run(newNote.id, newNote.title, newNote.content, newNote.createdAt);
+
+  return newNote;
+  }
+
   checkHealth() {
     return { status: 'OK' };
   }
